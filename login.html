@@ -1,0 +1,181 @@
+<!doctype html>
+<html>
+
+	<head>
+		<title>登录界面</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes">
+		<meta name="apple-mobile-web-app-status-bar-style" content="black">
+		<meta charset="utf-8">
+		<script src="js/jquery-1.9.1.min.js"></script>
+		<script src="js/mui.min.js"></script>
+		<script type="text/javascript" src="js/base.js"></script>
+		<link href="css/mui.min.css" rel="stylesheet" />
+		<link rel="stylesheet" href="css/login_style.css" />
+		<link rel="stylesheet" href="css/thestyle.css" />
+		<script type="text/javascript">
+			var usertel = localStorage.getItem('usertel');
+			var userID = localStorage.getItem('userID');
+			if(usertel && userID) {
+				window.location.href = 'chooseID.html';
+			}
+
+			//判断是否是评议时间段
+			function timeStatus() {
+				$.ajax({
+					type: "get",
+					url: window.url + "/timeJudgment",
+					success: function(data) {
+						console.log("成功timeStatus==", data)
+						if(data.body.bool == 'false') {
+
+							mui.confirm('当前时间段内暂无评议', '', ['确定'], function() {
+								window.history.back();
+							})
+
+						}
+					},
+					error: function(err) {
+						console.log("失败timeStatus==", err)
+
+					}
+				});
+			}
+		</script>
+
+	</head>
+
+	<body id="muicontent">
+
+		<!--顶部历史记录导航-->
+		<!--<header class="mui-bar mui-bar-nav">-->
+		<!--<a class="mui-action-back mui-icon mui-icon-left-nav mui-pull-left">返回</a>-->
+		<!--<h1 class="mui-title">登录</h1>-->
+		<!--</header>-->
+		<div class="mui-content">
+
+			<form id='login-form' class="mui-input-group">
+				<div class="mui-input-row">
+					<label><span class="mui-icon mui-icon-phone"></span></label>
+					<input id="usertel" type="number" class="mui-input-clear mui-input" placeholder="请输入手机号">
+				</div>
+				<div class="mui-input-row mui-middle">
+					<label><span class="mui-icon mui-icon-chatbubble"></span></label>
+					<input id="usermsg" type="number" class="mui-input-clear mui-input" placeholder="请输入验证码">
+				</div>
+				<button id="getmsg" class="mui-btn mui-btn-primary mui-btn-outlined mui-btn-yanzheng">获取验证码</button>
+				<div class="mui-content-padded">
+					<button id="login" class="mui-btn mui-btn-danger mui-btn-block">立即登录</button>
+				</div>
+			</form>
+		</div>
+	</body>
+
+</html>
+
+<script>
+	//	解决背景图被键盘顶起
+	document.getElementsByTagName("body")[0].style.height = window.innerHeight + 'px';
+
+	//验证手机号码,请求验证码
+	function fsmsg() {
+		var usertel = document.getElementById("usertel");
+		var myreg = /^[1]([3-9])[0-9]{9}$/;
+		if(!(myreg.test(usertel.value))) {
+			console.log('手机号码有误')
+			mui.toast('手机号码有误，请重新输入');
+			usertel.focus()
+			return false;
+		} else {
+			console.log('手机号码合法' + window.url);
+			var url = window.url + '/getVerificationCode?&mobile=' + usertel.value;
+			$.ajax({
+				url: url,
+				dataType: 'json',
+				type: 'get',
+
+				success: function(data) {
+					console.log('getmsg请求成功', data);
+					if(data.body) {
+						var biaoshi = data.body.status;
+						if(biaoshi == 1 || biaoshi == '1') {
+
+							mui.confirm('该手机号已参与过评议！', '', ['确定'], function() {
+								window.history.back();
+							})
+
+						}
+
+					} else {
+						console.log('该手机号可以参加评议');
+						mui.toast('验证码发送成功！');
+						var getmsge = document.getElementById("getmsg");
+						var time = 60;
+						var timer = setTimeout(fn, 1000);
+
+						function fn() {
+							time--;
+							if(time > 0) {
+								console.log('ttt---', time)
+								getmsge.innerHTML = time + "s后重发";
+								getmsge.disabled = 'true';
+								setTimeout(fn, 1000);
+							} else {
+								getmsge.innerHTML = "获取验证码";
+								getmsge.removeAttribute('disabled');
+
+							}
+						}
+					}
+				},
+				error: function(err) {
+					//异常处理；
+					console.log('getmsg请求失败');
+				}
+			})
+		}
+	}
+
+	//登录方法
+	function login() {
+		var usertel = document.getElementById("usertel").value;
+		var usermsg = document.getElementById("usermsg").value;
+		console.log(usertel + '--', usermsg);
+		var parmas = {
+			'mobile': usertel,
+			'code': usermsg
+		};
+		$.ajax({
+			url: window.url + "/verifyCode",
+			data: JSON.stringify(parmas),
+			type: 'POST',
+			dataType: "json",
+			success: function(data) {
+
+				if(data.success) {
+					var userID = data.body.VouserList[0].id;
+					localStorage.setItem('usertel', usertel);
+					localStorage.setItem('userID', userID);
+					setTimeout(function() {
+						window.location.href = 'chooseID.html';
+					}, 300)
+
+				} else {
+					mui.alert("验证码错误!");
+					return;
+				}
+
+			},
+			error: function(err) {
+				console.log("login请求失败！", err);
+			}
+		})
+	}
+
+	mui('.mui-input-group').on('tap', '#getmsg', fsmsg);
+
+	mui('.mui-input-group').on('tap', '#login', login);
+
+	window.addEventListener(onload, timeStatus())
+</script>

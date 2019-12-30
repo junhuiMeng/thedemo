@@ -58,13 +58,13 @@
 				<i id="info"></i>
 			</div>-->
 
-			<div class="mui-card-content">
+			<!--<div class="mui-card-content">
 				<p>注意事项：</p>
 				<p>1，评议时间：<span id="footspan">2019年12月20日——2019年12月29日</span></p>
 				<p>2，评议规则：满意=90分，基本满意=80分，一般=60分，不满意=0分</p>
 				<p>3，一个手机号只能给一个区划的问卷进行评议</p>
 				<p>4，注意：每个问卷评议单位达到80%才能提交</p>
-			</div>
+			</div>-->
 		</div>
 	</body>
 
@@ -73,6 +73,7 @@
 	mui.init({
 		swipeBack: true //启用右滑关闭功能
 	});
+	document.getElementsByTagName("body")[0].style.height = window.innerHeight + 'px';
 
 	//	获取页面身份信息
 	function getIDInfo() {

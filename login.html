@@ -15,11 +15,7 @@
 		<link rel="stylesheet" href="css/login_style.css" />
 		<link rel="stylesheet" href="css/thestyle.css" />
 		<script type="text/javascript">
-			var usertel = localStorage.getItem('usertel');
-			var userID = localStorage.getItem('userID');
-			if(usertel && userID) {
-				window.location.href = 'chooseID.html';
-			}
+			
 
 			//判断是否是评议时间段
 			function timeStatus() {
@@ -31,9 +27,15 @@
 						if(data.body.bool == 'false') {
 
 							mui.confirm('当前时间段内暂无评议', '', ['确定'], function() {
-								window.history.back();
+								f_close();
 							})
 
+						}else{
+							var usertel = localStorage.getItem('usertel');
+							var userID = localStorage.getItem('userID');
+							if(userID) {
+								window.location.href = 'chooseID.html';
+							}
 						}
 					},
 					error: function(err) {
@@ -98,11 +100,10 @@
 				success: function(data) {
 					console.log('getmsg请求成功', data);
 					if(data.body) {
-						var biaoshi = data.body.status;
+						var biaoshi = data.body.Status;
 						if(biaoshi == 1 || biaoshi == '1') {
-
 							mui.confirm('该手机号已参与过评议！', '', ['确定'], function() {
-								window.history.back();
+								f_close();
 							})
 
 						}
@@ -171,6 +172,15 @@
 				console.log("login请求失败！", err);
 			}
 		})
+	}
+	
+	
+	
+	function f_close() {
+		document.addEventListener('WeixinJSBridgeReady', function() {
+			WeixinJSBridge.call('closeWindow');
+		}, false);
+		WeixinJSBridge.call('closeWindow');
 	}
 
 	mui('.mui-input-group').on('tap', '#getmsg', fsmsg);
